@@ -1,5 +1,5 @@
 import unittest
-from statistics_service import StatisticsService
+from statistics_service import StatisticsService, SortBy
 from player import Player
 
 # Stub-luokka, palauttaa kovakoodatun pelaajalistan
@@ -61,11 +61,12 @@ class TestStatisticsService(unittest.TestCase):
         self.assertEqual(top_0[0].name, "Gretzky")
         self.assertEqual(top_0[0].points, 124)
 
-    """
-    def test_top_with_how_many_larger_than_list(self):
-        top_10 = self.stats.top(10)
-        # Listassa on vain 5 pelaajaa
-        self.assertEqual(len(top_10), 5)
-        # Ensimmäinen edelleen Gretzky
-        self.assertEqual(top_10[0].name, "Gretzky")
-    """
+    def test_top_by_goals(self):
+        top_goals = self.stats.top(2, SortBy.GOALS)
+        self.assertEqual(top_goals[0].name, "Lemieux")  # 45 maalia
+        self.assertEqual(top_goals[1].name, "Yzerman")  # 42 maalia
+
+    def test_top_by_assists(self):
+        top_assists = self.stats.top(2, SortBy.ASSISTS)
+        self.assertEqual(top_assists[0].name, "Gretzky")   # 89 syöttöä
+        self.assertEqual(top_assists[1].name, "Yzerman")   # 56 syöttöä

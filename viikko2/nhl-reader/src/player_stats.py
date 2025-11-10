@@ -6,3 +6,5 @@ class PlayerStats:
         filtered_players = [p for p in self.players if p.nationality == nationality]
         sorted_players = sorted(filtered_players, key=lambda p: p.points(), reverse=True)
         return sorted_players
+    def __str__(self):
+        return "Player stats class"

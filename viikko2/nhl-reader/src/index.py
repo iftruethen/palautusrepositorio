@@ -1,7 +1,8 @@
-from player_reader import PlayerReader
-from player_stats import PlayerStats
+# pylint: disable=too-many-statements
 from rich.console import Console
 from rich.table import Table
+from player_reader import PlayerReader
+from player_stats import PlayerStats
 
 def main():
     console = Console()

@@ -6,5 +6,8 @@ class PlayerReader:
         self.url = url
 
     def get_players(self):
-        response = requests.get(self.url).json()
-        return [Player(player_dict) for player_dict in response]
+        response = requests.get(self.url, timeout=10)
+        players_dict = response.json()
+        return [Player(player_dict) for player_dict in players_dict]
+    def __str__(self):
+        return "Data fetcher class"

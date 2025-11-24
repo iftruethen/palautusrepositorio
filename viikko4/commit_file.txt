@@ -1,2 +1,3 @@
 change 1 for commit 1
 change 2 for commit 2
+change 3 for commit 3

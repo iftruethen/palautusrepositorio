@@ -8,11 +8,63 @@ class Komento(Enum):
     NOLLAUS = 3
     KUMOA = 4
 
+class SuoritaKomento:
+    def __init__(self, sovelluslogiikka, lue_syote):
+        self._sovelluslogiikka = sovelluslogiikka
+        self._lue_syote = lue_syote
+
+    def suorita(self):
+        raise NotImplementedError
+
+class Summa(SuoritaKomento):
+    def suorita(self):
+        arvo = self._lue_syote()
+        self._sovelluslogiikka.plus(arvo)
+
+class Erotus(SuoritaKomento):
+    def suorita(self):
+        arvo = self._lue_syote()
+        self._sovelluslogiikka.miinus(arvo)
+
+class Nollaus(SuoritaKomento):
+    def suorita(self):
+        self._sovelluslogiikka.nollaa()
+
+class Kumoa(SuoritaKomento):
+    # Kumoa-komentoa varten tarvitaan tieto edellisestä suoritetusta komennosta
+    def __init__(self, sovelluslogiikka, lue_syote, edellinen_komento_viite):
+        super().__init__(sovelluslogiikka, lue_syote)
+        self._edellinen_komento_viite = edellinen_komento_viite # Viite Kayttoliittyma.edellinen_komento
+
+    def suorita(self):
+        # Haetaan viimeksi suoritettu komento Kayttoliittyma-luokasta
+        edellinen_komento = self._edellinen_komento_viite[0] 
+
+        if edellinen_komento:
+            edellinen_komento.kumoa()
+            
+            # Tyhjennetään edellinen komento, jotta kumoa-nappia ei voi painaa uudestaan
+            # ennen uutta operaatiota.
+            self._edellinen_komento_viite[0] = None
 
 class Kayttoliittyma:
     def __init__(self, sovelluslogiikka, root):
         self._sovelluslogiikka = sovelluslogiikka
         self._root = root
+        self._edellinen_komento = [None] 
+
+        self._komennot = {
+            Komento.SUMMA: Summa(sovelluslogiikka, self._lue_syote),
+            Komento.EROTUS: Erotus(sovelluslogiikka, self._lue_syote),
+            Komento.NOLLAUS: Nollaus(sovelluslogiikka, self._lue_syote),
+            Komento.KUMOA: Kumoa(sovelluslogiikka, self._lue_syote, self._edellinen_komento) 
+        }
+
+    def _lue_syote(self):
+        try:
+            return int(self._syote_kentta.get())
+        except Exception:
+            return 0
 
     def kaynnista(self):
         self._arvo_var = StringVar()
@@ -55,21 +107,11 @@ class Kayttoliittyma:
         self._kumoa_painike.grid(row=2, column=3)
 
     def _suorita_komento(self, komento):
-        arvo = 0
-
-        try:
-            arvo = int(self._syote_kentta.get())
-        except Exception:
-            pass
-
-        if komento == Komento.SUMMA:
-            self._sovelluslogiikka.plus(arvo)
-        elif komento == Komento.EROTUS:
-            self._sovelluslogiikka.miinus(arvo)
-        elif komento == Komento.NOLLAUS:
-            self._sovelluslogiikka.nollaa()
-        elif komento == Komento.KUMOA:
-            pass
+        komento_olio = self._komennot[komento]
+        
+        self._edellinen_komento = komento_olio 
+        
+        komento_olio.suorita()
 
         self._kumoa_painike["state"] = constants.NORMAL
 
@@ -80,3 +122,4 @@ class Kayttoliittyma:
 
         self._syote_kentta.delete(0, constants.END)
         self._arvo_var.set(self._sovelluslogiikka.arvo())
+

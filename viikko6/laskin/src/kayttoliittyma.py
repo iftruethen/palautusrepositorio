@@ -1,7 +1,6 @@
 from enum import Enum
 from tkinter import ttk, constants, StringVar
 
-
 class Komento(Enum):
     SUMMA = 1
     EROTUS = 2
@@ -12,45 +11,52 @@ class SuoritaKomento:
     def __init__(self, sovelluslogiikka, lue_syote):
         self._sovelluslogiikka = sovelluslogiikka
         self._lue_syote = lue_syote
+        self._edellinen_arvo = 0
 
     def suorita(self):
         raise NotImplementedError
+    
+    def kumoa(self):
+        self._sovelluslogiikka.aseta_arvo(self._edellinen_arvo)
 
 class Summa(SuoritaKomento):
     def suorita(self):
+        self._edellinen_arvo = self._sovelluslogiikka.arvo()
+        
         arvo = self._lue_syote()
         self._sovelluslogiikka.plus(arvo)
 
 class Erotus(SuoritaKomento):
     def suorita(self):
+        self._edellinen_arvo = self._sovelluslogiikka.arvo()
+        
         arvo = self._lue_syote()
         self._sovelluslogiikka.miinus(arvo)
 
 class Nollaus(SuoritaKomento):
     def suorita(self):
+        self._edellinen_arvo = self._sovelluslogiikka.arvo()
+        
         self._sovelluslogiikka.nollaa()
 
 class Kumoa(SuoritaKomento):
-    # Kumoa-komentoa varten tarvitaan tieto edellisestä suoritetusta komennosta
     def __init__(self, sovelluslogiikka, lue_syote, edellinen_komento_viite):
         super().__init__(sovelluslogiikka, lue_syote)
-        self._edellinen_komento_viite = edellinen_komento_viite # Viite Kayttoliittyma.edellinen_komento
+        self._edellinen_komento_viite = edellinen_komento_viite 
 
     def suorita(self):
-        # Haetaan viimeksi suoritettu komento Kayttoliittyma-luokasta
         edellinen_komento = self._edellinen_komento_viite[0] 
 
         if edellinen_komento:
             edellinen_komento.kumoa()
             
-            # Tyhjennetään edellinen komento, jotta kumoa-nappia ei voi painaa uudestaan
-            # ennen uutta operaatiota.
             self._edellinen_komento_viite[0] = None
 
 class Kayttoliittyma:
     def __init__(self, sovelluslogiikka, root):
         self._sovelluslogiikka = sovelluslogiikka
         self._root = root
+        
         self._edellinen_komento = [None] 
 
         self._komennot = {
@@ -109,11 +115,13 @@ class Kayttoliittyma:
     def _suorita_komento(self, komento):
         komento_olio = self._komennot[komento]
         
-        self._edellinen_komento = komento_olio 
-        
         komento_olio.suorita()
 
-        self._kumoa_painike["state"] = constants.NORMAL
+        if komento != Komento.KUMOA:
+            self._edellinen_komento[0] = komento_olio
+            self._kumoa_painike["state"] = constants.NORMAL
+        else:
+            self._kumoa_painike["state"] = constants.DISABLED
 
         if self._sovelluslogiikka.arvo() == 0:
             self._nollaus_painike["state"] = constants.DISABLED
@@ -122,4 +130,3 @@ class Kayttoliittyma:
 
         self._syote_kentta.delete(0, constants.END)
         self._arvo_var.set(self._sovelluslogiikka.arvo())
-
